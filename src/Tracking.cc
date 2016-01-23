@@ -37,6 +37,8 @@
 #include<fstream>
 
 
+
+
 using namespace std;
 
 namespace ORB_SLAM
@@ -312,6 +314,35 @@ void Tracking::GrabImage(const sensor_msgs::ImageConstPtr& msg)
         tf::Transform tfTcw(M,V);
 
         mTfBr.sendTransform(tf::StampedTransform(tfTcw,ros::Time::now(), "ORB_SLAM/World", "ORB_SLAM/Camera"));
+
+	geometry_msgs::PoseStamped poseMSG, poseMSGtransformed;
+	poseMSG.pose.position.x = tfTcw.getOrigin().x();
+	poseMSG.pose.position.y = tfTcw.getOrigin().y();
+	poseMSG.pose.position.z = tfTcw.getOrigin().z();
+	poseMSG.pose.orientation.x = tfTcw.getRotation().x();
+	poseMSG.pose.orientation.y = tfTcw.getRotation().y();
+	poseMSG.pose.orientation.z = tfTcw.getRotation().z();
+	poseMSG.pose.orientation.w = tfTcw.getRotation().w();
+	poseMSG.header.frame_id = "VSLAM";
+	poseMSG.header.stamp = ros::Time::now();
+	PosPub.publish(poseMSG);
+
+  tf::Transform tfTci, tfTiw;
+  tfTci.setOrigin( tf::Vector3(9.0, 0.0, 0.0) );                     // Note Translation are given in the parent frame 
+  tfTci.setRotation( tf::createQuaternionFromRPY(M_PI/2,M_PI/2,0) );
+
+  tfTiw = tfTci.inverse()*tfTcw;
+
+	poseMSG.pose.position.x = tfTiw.getOrigin().x();
+	poseMSG.pose.position.y = tfTiw.getOrigin().y();
+	poseMSG.pose.position.z = tfTiw.getOrigin().z();
+	poseMSG.pose.orientation.x = tfTiw.getRotation().x();
+	poseMSG.pose.orientation.y = tfTiw.getRotation().y();
+	poseMSG.pose.orientation.z = tfTiw.getRotation().z();
+	poseMSG.pose.orientation.w = tfTiw.getRotation().w();
+	poseMSG.header.frame_id = "VSLAM_at_imu";
+	poseMSG.header.stamp = ros::Time::now();
+	Pos2Pub.publish(poseMSGtransformed);
     }
 
 }
