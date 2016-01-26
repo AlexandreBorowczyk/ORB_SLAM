@@ -323,14 +323,15 @@ void Tracking::GrabImage(const sensor_msgs::ImageConstPtr& msg)
 	poseMSG.pose.orientation.y = tfTcw.getRotation().y();
 	poseMSG.pose.orientation.z = tfTcw.getRotation().z();
 	poseMSG.pose.orientation.w = tfTcw.getRotation().w();
-	poseMSG.header.frame_id = "VSLAM";
+	poseMSG.header.frame_id = "ORB_SLAM/World";
 	poseMSG.header.stamp = ros::Time::now();
 	PosPub.publish(poseMSG);
 
   tf::Transform tfTci, tfTiw;
-  tfTci.setOrigin( tf::Vector3(9.0, 0.0, 0.0) );                     // Note Translation are given in the parent frame 
-  tfTci.setRotation( tf::createQuaternionFromRPY(M_PI/2,M_PI/2,0) );
-
+  tfTci.setOrigin( tf::Vector3(0.0, 0.0, 0.0) ); // Do not use as ORB_SLAM linear pose is dimensionless 
+  
+  /* Works but need to confirm, rotation definitions use in ros*/
+  tfTci.setRotation( tf::createQuaternionFromRPY(0,-M_PI/2,-M_PI/2) ); 
   tfTiw = tfTci.inverse()*tfTcw;
 
 	poseMSG.pose.position.x = tfTiw.getOrigin().x();
@@ -340,7 +341,7 @@ void Tracking::GrabImage(const sensor_msgs::ImageConstPtr& msg)
 	poseMSG.pose.orientation.y = tfTiw.getRotation().y();
 	poseMSG.pose.orientation.z = tfTiw.getRotation().z();
 	poseMSG.pose.orientation.w = tfTiw.getRotation().w();
-	poseMSG.header.frame_id = "VSLAM_at_imu";
+	poseMSG.header.frame_id = "ORB_SLAM/World";
 	poseMSG.header.stamp = ros::Time::now();
 	Pos2Pub.publish(poseMSGtransformed);
     }
